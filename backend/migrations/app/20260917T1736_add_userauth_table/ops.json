@@ -1,0 +1,206 @@
+[
+  {
+    "id": "dropColumn.user.password",
+    "label": "Drop column \"password\" from \"user\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "password",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"password\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "password"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"password\"",
+        "sql": "ALTER TABLE \"public\".\"user\" DROP COLUMN \"password\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"password\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "user",
+          "password"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.userAuth",
+    "label": "Create table \"userAuth\"",
+    "summary": "Creates table \"userAuth\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "userAuth"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"userAuth\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userAuth\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"userAuth\"",
+        "sql": "CREATE TABLE \"public\".\"userAuth\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"provider\" text NOT NULL,\n  \"providerId\" text NOT NULL,\n  \"updatedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"userAuth\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userAuth\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.userAuth.userAuth_provider_providerId_key",
+    "label": "Add unique constraint on \"userAuth\" (provider, providerId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "userAuth_provider_providerId_key",
+        "table": "userAuth"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"userAuth_provider_providerId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userAuth_provider_providerId_key",
+          "public",
+          "\"public\".\"userAuth\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"userAuth_provider_providerId_key\"",
+        "sql": "ALTER TABLE \"public\".\"userAuth\" ADD CONSTRAINT \"userAuth_provider_providerId_key\" UNIQUE (\"provider\", \"providerId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"userAuth_provider_providerId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userAuth_provider_providerId_key",
+          "public",
+          "\"public\".\"userAuth\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.userAuth.userAuth_userId_idx_a489d58a",
+    "label": "Create index \"userAuth_userId_idx_a489d58a\" on \"userAuth\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "userAuth_userId_idx_a489d58a",
+        "table": "userAuth"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"userAuth_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userAuth_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"userAuth_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"userAuth_userId_idx_a489d58a\" ON \"public\".\"userAuth\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"userAuth_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"userAuth_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.userAuth.userAuth_userId_fkey",
+    "label": "Add foreign key \"userAuth_userId_fkey\" on \"userAuth\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "userAuth_userId_fkey",
+        "table": "userAuth"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"userAuth_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userAuth_userId_fkey",
+          "public",
+          "\"public\".\"userAuth\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"userAuth_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"userAuth\"\nADD CONSTRAINT \"userAuth_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"userAuth_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "userAuth_userId_fkey",
+          "public",
+          "\"public\".\"userAuth\""
+        ]
+      }
+    ]
+  }
+]

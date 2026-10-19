@@ -1,0 +1,59 @@
+// use prisma-8
+// Contract inferred from the live database schema. Edit as needed, then run `prisma contract emit`.
+model User {
+  id           String           @id @default(uuid())
+  email        String           @unique
+  name         String?
+  picture      String?
+  role         User_Role        @default(USER)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @default(now())
+
+  applications JobApplication[]
+  authAccounts UserAuth[]
+}
+
+model UserAuth {
+  id         String   @id @default(uuid())
+  userId     String
+  provider   String
+  providerId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
+}
+
+enum User_Role {
+  ADMIN = "ADMIN"
+  USER = "USER"
+}
+
+model JobApplication {
+  id          String                 @id @default(uuid())
+  userId      String
+
+  companyName String?
+  jobTitle    String?
+  jobLink     String?
+  jobSource   String?
+  location    String?
+  appliedAt   DateTime               @default(now())
+  status      Job_Application_Status @default(APPLIED)
+  salary      String?
+  notes       String?
+
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @default(now())
+
+  user        User                   @relation(fields:[userId], references:[id])
+}
+
+enum Job_Application_Status {
+  APPLIED
+  INTERVIEW
+  REJECTED
+  OFFER
+}

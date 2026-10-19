@@ -1,0 +1,45 @@
+[
+  {
+    "id": "alterNullability.dropNotNull.jobApplication.companyName",
+    "label": "Drop NOT NULL on \"jobApplication\".\"companyName\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "companyName",
+        "table": "jobApplication"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"companyName\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "jobApplication",
+          "companyName"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"companyName\"",
+        "sql": "ALTER TABLE \"public\".\"jobApplication\" ALTER COLUMN \"companyName\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"companyName\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "jobApplication",
+          "companyName",
+          "YES"
+        ]
+      }
+    ]
+  }
+]
